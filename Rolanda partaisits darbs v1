@@ -1,139 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Todo List V2</title>
-<title>Lets go</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Todo V2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body onload="loadData()">
+<div class="container-sm mt-4">
+    <div class="card" style="width: 22rem;">
+        <img src="https://media.istockphoto.com/id/157030584/vector/thumb-up-emoticon.jpg?s=612x612&w=0&k=20&c=GGl4NM_6_BzvJxLSl7uCDF4Vlo_zHGZVmmqOBIewgKg=" class="card-img-top">
 
-<div class="container mt-5">
-<div class="card p-3">
+        <div class="card-body">
+            <h3 class="card-title">Mani darbi</h3>
 
-<h3 class="text-center">Todo List V2</h3>
+            <!-- PRIORITATES IZVELNE -->
+            <select id="priority" class="form-select mb-2">
+                <option value="high">Svarigi</option>
+                <option value="medium">Videtji</option>
+                <option value="low">Zema prioritate</option>
+            </select>
 
-<div class="input-group mb-3">
+            <!-- Ievades lauks -->
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="info">
+                <button class="btn btn-outline-primary" onclick="add()">Pievienot</button>
+            </div>
 
-<select id="priority" class="form-select">
-<option value="high">Svarīgi</option>
-<option value="medium" selected>Vidēja</option>
-<option value="low">Zema</option>
-</select>
-
-<input type="text" id="info" class="form-control" placeholder="Ieraksti darbu">
-
-<button class="btn btn-primary" onclick="add()">Pievienot</button>
-
-</div>
-
-<ul id="task-list" class="list-group"></ul>
-
-</div>
+            <ul id="task-list" class="list-group"></ul>
+        </div>
+    </div>
 </div>
 
 <script>
 
-function add(text="",done=false,priority="medium"){
+// Pievieno uzdevumu
+function add(text = "", done = false, priority = null) {
+    const input = document.getElementById("info");
+    const selectedPriority = priority || document.getElementById("priority").value;
 
-let input=document.getElementById("info");
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex align-items-center";
 
-if(text=="") text=input.value;
+    // Checkbox
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.classList.add("form-check-input", "me-2");
+    checkbox.checked = done;
 
-if(text=="") return;
+    // Teksts
+    const span = document.createElement("span");
+    span.textContent = text || input.value;
 
-if(priority=="medium") priority=document.getElementById("priority").value;
+    if (done) span.classList.add("text-decoration-line-through");
 
-let li=document.createElement("li");
-li.className="list-group-item d-flex align-items-center";
+    checkbox.onclick = function () {
+        span.classList.toggle("text-decoration-line-through");
+        saveData();
+    };
 
-let checkbox=document.createElement("input");
-checkbox.type="checkbox";
-checkbox.className="form-check-input me-2";
-checkbox.checked=done;
+    // Prioritates krasa
+    const badge = document.createElement("span");
+    badge.classList.add("badge", "ms-2");
 
-let span=document.createElement("span");
-span.innerText=text;
+    if (selectedPriority === "high") {
+        badge.classList.add("bg-danger");
+        badge.textContent = "Svarigi";
+    } else if (selectedPriority === "medium") {
+        badge.classList.add("bg-warning", "text-dark");
+        badge.textContent = "Videtji";
+    } else {
+        badge.classList.add("bg-success");
+        badge.textContent = "Zema";
+    }
 
-if(done) span.classList.add("text-decoration-line-through");
+    // Delete poga
+    const del = document.createElement("button");
+    del.textContent = "Dzest";
+    del.classList.add("btn", "btn-danger", "ms-auto");
+    del.onclick = function () {
+        li.remove();
+        saveData();
+    };
 
-checkbox.onclick=function(){
-span.classList.toggle("text-decoration-line-through");
-saveData();
+    li.appendChild(checkbox);
+    li.appendChild(span);
+    li.appendChild(badge);
+    li.appendChild(del);
+
+    document.getElementById("task-list").appendChild(li);
+    input.value = "";
+
+    saveData();
 }
 
-let badge=document.createElement("span");
+// Saglaba localStorage
+function saveData() {
+    const items = [];
 
-if(priority=="high"){
-badge.className="badge bg-danger me-2";
-badge.innerText="SVARĪGI";
-}
-else if(priority=="low"){
-badge.className="badge bg-secondary me-2";
-badge.innerText="Zema";
-}
-else{
-badge.className="badge bg-warning text-dark me-2";
-badge.innerText="Vidēja";
-}
+    document.querySelectorAll("#task-list li").forEach(li => {
+        const text = li.querySelector("span").textContent;
+        const done = li.querySelector("input").checked;
+        const badge = li.querySelector(".badge").textContent;
 
-let del=document.createElement("button");
-del.innerText="Dzēst";
-del.className="btn btn-outline-danger btn-sm ms-auto";
+        let priority = "low";
+        if (badge === "Svarigi") priority = "high";
+        else if (badge === "Videtji") priority = "medium";
 
-del.onclick=function(){
-li.remove();
-saveData();
+        items.push({ text, done, priority });
+    });
+
+    localStorage.setItem("tasks", JSON.stringify(items));
 }
 
-li.appendChild(checkbox);
-li.appendChild(badge);
-li.appendChild(span);
-li.appendChild(del);
-
-document.getElementById("task-list").appendChild(li);
-
-input.value="";
-
-saveData();
-
-}
-
-function saveData(){
-
-let tasks=[];
-
-document.querySelectorAll("#task-list li").forEach(li=>{
-
-let text=li.children[2].innerText;
-let done=li.children[0].checked;
-
-let badge=li.children[1].innerText;
-
-let priority="medium";
-
-if(badge=="SVARĪGI") priority="high";
-if(badge=="Zema") priority="low";
-
-tasks.push({text,done,priority});
-
-});
-
-localStorage.setItem("tasks",JSON.stringify(tasks));
-
-}
-
-function loadData(){
-
-let data=JSON.parse(localStorage.getItem("tasks") || "[]");
-
-data.forEach(task=>{
-add(task.text,task.done,task.priority);
-});
-
+// Ielade localStorage
+function loadData() {
+    const data = JSON.parse(localStorage.getItem("tasks") || "[]");
+    data.forEach(item => add(item.text, item.done, item.priority));
 }
 
 </script>
-
 </body>
 </html>
