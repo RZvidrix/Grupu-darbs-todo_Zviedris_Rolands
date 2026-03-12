@@ -8,7 +8,7 @@
 
 <body onload="loadData()">
 <div class="container-sm mt-4">
-    <div class="card" style="width: 22rem;">
+    <div class="card" style="width: 40rem;">
         <img src="https://media.istockphoto.com/id/157030584/vector/thumb-up-emoticon.jpg?s=612x612&w=0&k=20&c=GGl4NM_6_BzvJxLSl7uCDF4Vlo_zHGZVmmqOBIewgKg=" class="card-img-top">
 
         <div class="card-body">
@@ -26,13 +26,81 @@
                 <input type="text" class="form-control" id="info">
                 <button class="btn btn-outline-primary" onclick="add()">Pievienot</button>
             </div>
+            
+            <div class="input-group mb-3">
+                <input class="form-control" type="text" id="abc" oninput="search()" placeholder="Search">
+                <button class="btn btn-outline-secondary" onclick="filterTasks('all')">Visi</button>
+                <button class="btn btn-outline-secondary" onclick="filterTasks('active')">Aktīvie</button>
+                <button class="btn btn-outline-secondary" onclick="filterTasks('done')">Pabeigtie</button>
+            </div>
 
             <ul id="task-list" class="list-group"></ul>
+            <div class="d-flex justify-content-between">
+                <span id="To-Do" class="text-muted"></span>
+                <span onclick="deleteDoneTask()" class="text-danger text-decoration-underline">Dzest pabeigtos</span>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+
+let currentFilter = "all";
+
+function filterTasks(type) {
+currentFilter = type;
+search();
+}
+
+function deleteDoneTask(){
+    var tasks = document.querySelectorAll("#task-list li");
+    
+    tasks.forEach(task =>{
+        let elementClass = task.querySelector(".Aab").classList;
+        if(elementClass.contains("text-decoration-line-through")){
+            task.remove();
+        }
+    })
+    saveData();
+}
+
+function count(){
+    var counter = 0;
+    var tasks = document.querySelectorAll("#task-list li");
+    
+    tasks.forEach(task =>{
+        let elementClass = task.querySelector(".Aab").classList;
+        if(!elementClass.contains("text-decoration-line-through")){
+            counter++;
+        }
+    })
+    document.getElementById("To-Do").textContent = `Atlikusi ${counter} darbi`
+}
+
+function search() {
+  // Declare variables
+    var input, filter, ul, li, a, i, txtValue;
+    input = document.getElementById('abc');
+    filter = input.value.toUpperCase();
+    ul = document.getElementById("task-list");
+    li = ul.getElementsByTagName('li');
+
+  // Loop through all list items, and hide those who don't match the search query
+    for (i = 0; i < li.length; i++) {
+        a = li[i].getElementsByTagName("span")[0];
+        txtValue = a.textContent || a.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            li[i].classList.remove("d-none");
+        } else {
+            li[i].classList.add("d-none");
+        }
+        if(currentFilter === "active" && a.classList.contains("text-decoration-line-through")){
+            li[i].classList.add("d-none");
+        } else if(currentFilter === "done" && !a.classList.contains("text-decoration-line-through")){
+            li[i].classList.add("d-none");
+        }
+    }
+}
 
 // Pievieno uzdevumu
 function add(text = "", done = false, priority = null) {
@@ -50,12 +118,14 @@ function add(text = "", done = false, priority = null) {
 
     // Teksts
     const span = document.createElement("span");
+    span.className = "Aab";
     span.textContent = text || input.value;
 
     if (done) span.classList.add("text-decoration-line-through");
 
     checkbox.onclick = function () {
         span.classList.toggle("text-decoration-line-through");
+        count()
         saveData();
     };
 
@@ -80,6 +150,7 @@ function add(text = "", done = false, priority = null) {
     del.classList.add("btn", "btn-danger", "ms-auto");
     del.onclick = function () {
         li.remove();
+        count();
         saveData();
     };
 
@@ -90,7 +161,8 @@ function add(text = "", done = false, priority = null) {
 
     document.getElementById("task-list").appendChild(li);
     input.value = "";
-
+    
+    count();
     saveData();
 }
 
@@ -117,6 +189,7 @@ function saveData() {
 function loadData() {
     const data = JSON.parse(localStorage.getItem("tasks") || "[]");
     data.forEach(item => add(item.text, item.done, item.priority));
+    count();
 }
 
 </script>
